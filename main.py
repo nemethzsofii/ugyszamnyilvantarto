@@ -23,6 +23,23 @@ def register_routes(app):
     def hello_world():
         return render_template("data_input.html")
 
+    @app.route('/get-cases', methods=['GET'])
+    def get_cases():
+        try:
+            cases = md.Case.query.all()
+            cases_list = [
+                {
+                    "id": case.id,
+                    "name": case.name,
+                    "client_name": case.client_name,
+                    "description": case.description
+                } for case in cases
+            ]
+            return jsonify(cases_list), 200
+        except Exception as e:
+            print(f"Error fetching cases: {tb.format_exc()}")
+            return jsonify({"error": f"Error fetching cases: {str(e)}"}), 500
+        
     @app.route('/add-case', methods=['POST'])
     def add_case():
         try:
@@ -33,6 +50,7 @@ def register_routes(app):
             case_description = data.get('case-description')
             
             new_case = md.Case(
+                number=case_number,
                 name=case_name,
                 client_name=client_name,
                 description=case_description
