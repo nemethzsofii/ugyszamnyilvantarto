@@ -1,130 +1,117 @@
-<!DOCTYPE html>
-<html lang="hu">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Adatbevitel</title>
-
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-        /* minimal custom styling only for page background */
-        body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        }
-    </style>
-</head>
-<body>
-    <div class="container py-5">
-        <h1 class="text-center text-white mb-5">Jogügyleti Nyilvántartó</h1>
-
-        <div class="row g-4">
-            <!-- Új ügy felvétele -->
-            <div class="col-12 col-lg-6">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <h2 class="card-title h5 mb-4">Új ügy felvétele</h2>
-
-                        <form id="case-form">
-                            <div class="mb-3">
-                                <label for="case-number" class="form-label">Ügyszám</label>
-                                <input type="text" id="case-number" name="case-number" class="form-control" placeholder="Ügyszám megadása">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="client-name" class="form-label">Ügyfél neve</label>
-                                <input type="text" id="client-name" name="client-name" class="form-control" placeholder="Az ügyfél neve">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="case-name" class="form-label">Ügy megnevezése</label>
-                                <input type="text" id="case-name" name="case-name" class="form-control" placeholder="Az ügy megnevezése">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="case-description" class="form-label">Leírás</label>
-                                <textarea id="case-description" name="case-description" class="form-control" rows="5" placeholder="Az ügy részletes leírása"></textarea>
-                            </div>
-
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary flex-fill">Mentés</button>
-                                <button type="reset" class="btn btn-outline-secondary flex-fill">Törlés</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+{% extends "layout.html" %} {% block title %}Adatbevitel - Jogügyleti
+Nyilvántartó{% endblock %} {% block content %}
+<h1 class="text-center text-white mb-5">Új Adatok Felvétele</h1>
+  <div class="row g-4">
+    <!-- Új ügy felvétele -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="card-title h5 mb-4">Új ügy felvétele</h2>
+          <form id="case-form">
+            <div class="mb-3">
+              <label for="case-number" class="form-label">Ügyszám</label>
+              <input
+                type="text"
+                id="case-number"
+                name="case-number"
+                class="form-control"
+                placeholder="Ügyszám megadása"
+              />
             </div>
 
-            <!-- Új munka felvétele -->
-            <div class="col-12 col-lg-6">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <h2 class="card-title h5 mb-4">Új munka felvétele</h2>
-
-                        <form action="/add-work" method="post">
-                            <div class="mb-3">
-                                <label for="case-select" class="form-label">Ügy kiválasztása</label>
-                                <select id="case-select" class="form-select">
-                                    <option value="">-- Válassz egy ügyet --</option>
-                                    <!-- populate options dynamically -->
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="work-date" class="form-label">Munkadátum</label>
-                                <input type="date" id="work-date" class="form-control">
-                            </div>
-
-                            <div class="row g-3">
-                                <div class="col-12 col-md-6">
-                                    <label for="start-time" class="form-label">Kezdési idő</label>
-                                    <input type="time" id="start-time" class="form-control">
-                                </div>
-                                <div class="col-12 col-md-6">
-                                    <label for="end-time" class="form-label">Befejezési idő</label>
-                                    <input type="time" id="end-time" class="form-control">
-                                </div>
-                            </div>
-
-                            <div class="d-flex gap-2 mt-4">
-                                <button type="submit" class="btn btn-primary flex-fill">Mentés</button>
-                                <button type="reset" class="btn btn-outline-secondary flex-fill">Törlés</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+            <div class="mb-3">
+              <label for="client-name" class="form-label">Ügyfél neve</label>
+              <input
+                type="text"
+                id="client-name"
+                name="client-name"
+                class="form-control"
+                placeholder="Az ügyfél neve"
+              />
             </div>
+
+            <div class="mb-3">
+              <label for="case-name" class="form-label">Ügy megnevezése</label>
+              <input
+                type="text"
+                id="case-name"
+                name="case-name"
+                class="form-control"
+                placeholder="Az ügy megnevezése"
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="case-description" class="form-label">Leírás</label>
+              <textarea
+                id="case-description"
+                name="case-description"
+                class="form-control"
+                rows="5"
+                placeholder="Az ügy részletes leírása"
+              ></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary flex-fill">
+                Mentés
+              </button>
+              <button type="reset" class="btn btn-outline-secondary flex-fill">
+                Törlés
+              </button>
+            </div>
+          </form>
         </div>
+      </div>
     </div>
 
-    <!-- Bootstrap JS bundle (Popper included) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Új munka felvétele -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <h2 class="card-title h5 mb-4">Új munka felvétele</h2>
 
-    <script>
-        document.getElementById('case-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(document.getElementById('case-form'));
-            
-            try {
-                const response = await fetch('/add-case', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                
-                if (response.ok) {
-                    alert('✓ ' + data.message);
-                    document.getElementById('case-form').reset();
-                } else {
-                    alert('✗ ' + data.error);
-                }
-            } catch (error) {
-                alert('✗ Hiba: ' + error.message);
-            }
-        });
-    </script>
-</body>
-</html>
+          <form id="work-form">
+            <div class="mb-3">
+              <label for="case-select" class="form-label"
+                >Ügy kiválasztása</label
+              >
+              <select id="case-select" class="form-select">
+                <option value="">-- Válassz egy ügyet --</option>
+                <!-- populate options dynamically -->
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="work-date" class="form-label">Munkadátum</label>
+              <input type="date" id="work-date" class="form-control" />
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label for="start-time" class="form-label">Kezdési idő</label>
+                <input type="time" id="start-time" class="form-control" />
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="end-time" class="form-label">Befejezési idő</label>
+                <input type="time" id="end-time" class="form-control" />
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary flex-fill">
+                Mentés
+              </button>
+              <button type="reset" class="btn btn-outline-secondary flex-fill">
+                Törlés
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="/static/js/data_input.js"></script>
+{% endblock %}
