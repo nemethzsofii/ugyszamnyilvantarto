@@ -19,4 +19,4 @@ if __name__ == "__main__":
         resizable=True
     )
 
-    webview.start(debug=True)  # ✅ enable dev tools if possible
+    webview.start(debug=True)

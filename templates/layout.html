@@ -11,37 +11,70 @@
       rel="stylesheet"
     />
 
+    <!-- Font Awesome (optional, subtle icons later) -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
     <style>
       body {
         min-height: 100vh;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f6f8;
       }
 
+      /* Navbar */
       .navbar {
-        background-color: rgba(0, 0, 0, 0.3) !important;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background-color: rgba(20, 20, 20, 0.9) !important;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        position: relative;
+        z-index: 1050;
       }
 
       .navbar-brand {
-        font-weight: 700;
-        font-size: 1.5em;
+        font-weight: 600;
+        letter-spacing: 0.3px;
       }
 
       .nav-link {
-        color: rgba(255, 255, 255, 0.8) !important;
-        transition: color 0.3s ease;
+        color: rgba(255, 255, 255, 0.75) !important;
+        padding: 0.5rem 0.75rem;
+        transition: color 0.2s ease;
       }
 
-      .nav-link:hover {
+      .nav-link:hover,
+      .nav-link:focus {
         color: #ffffff !important;
       }
 
       .nav-link.active {
-        color: #ffc107 !important;
-        border-bottom: 2px solid #ffc107;
+        color: #ffffff !important;
+        border-bottom: 2px solid #0d6efd;
       }
 
+      /* Dropdowns */
+      .dropdown-menu {
+        background-color: rgba(30, 30, 30, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      }
+
+      .dropdown-item {
+        color: rgba(255, 255, 255, 0.8);
+        padding: 0.5rem 1rem;
+        font-size: 0.95rem;
+      }
+
+      .dropdown-item:hover,
+      .dropdown-item:focus {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+      }
+
+      /* Main content */
       main {
         padding: 40px 20px;
       }
@@ -49,11 +82,12 @@
 
     {% block extra_css %}{% endblock %}
   </head>
+
   <body>
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container-fluid">
-        <a class="navbar-brand" href="/">📋 Jogügyleti Nyilvántartó</a>
+        <a class="navbar-brand" href="/">Jogügyleti Nyilvántartó</a>
 
         <button
           class="navbar-toggler"
@@ -69,40 +103,58 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
-            <!-- Ügyek -->
-            <li class="nav-item">
-              <a class="nav-link" href="/case-input">➕ Új ügy</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/case-table">📂 Ügyek</a>
-            </li>
-
-            <!-- Munkák -->
-            <li class="nav-item">
-              <a class="nav-link" href="/case-work-input">➕ Új munka</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/case-work-table">🗂️ Munkák</a>
-            </li>
-
-            <!-- Ügyfelek -->
-            <li class="nav-item">
-              <a class="nav-link" href="/client-input">➕ Új ügyfél</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/client-table">🗂️ Ügyfelek</a>
-            </li>
-
-            <!-- Ügyek -->
-            <li class="nav-item">
-              <a class="nav-link" href="/outsource-company"
-                >➕ Új bedolgozó cég</a
+            <!-- ÚJ -->
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
               >
+                Új
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="/case-input">Új ügy</a></li>
+                <li>
+                  <a class="dropdown-item" href="/case-work-input">Új munka</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="/client-input">Új ügyfél</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="/outsource-company">
+                    Új bedolgozó cég
+                  </a>
+                </li>
+              </ul>
             </li>
 
-            <!-- Egyéb -->
+            <!-- LISTÁK -->
+            <li class="nav-item dropdown">
+              <a
+                class="nav-link dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Listák
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="/case-table">Ügyek</a></li>
+                <li>
+                  <a class="dropdown-item" href="/case-work-table">Munkák</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="/client-table">Ügyfelek</a>
+                </li>
+              </ul>
+            </li>
+
+            <!-- NAPTÁR -->
             <li class="nav-item">
-              <a class="nav-link" href="/calendar">📅 Naptár</a>
+              <a class="nav-link" href="/calendar">Naptár</a>
             </li>
           </ul>
         </div>
