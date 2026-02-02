@@ -6,16 +6,11 @@ db = SQLAlchemy()
 
 def init_db(app):
     """Initialize database with Flask app"""
-    #DB_USER = os.environ.get("DB_USER")
-    DB_USER = "root"
-    #DB_PASS = quote_plus(os.environ.get("DB_PASS"))
-    DB_PASS = quote_plus("BahHihee65@MYSQL")
-    #DB_HOST = os.environ.get("DB_HOST")
-    DB_HOST = "localhost"
-    #DB_PORT = os.environ.get("DB_PORT")
-    DB_PORT = "3306"
-    #DB_NAME = os.environ.get("DB_NAME")
-    DB_NAME = "ugyszamnyilvantarto"
+    DB_USER = os.environ.get("DB_USER")
+    DB_PASS = quote_plus(os.environ.get("DB_PASS"))
+    DB_HOST = os.environ.get("DB_HOST")
+    DB_PORT = os.environ.get("DB_PORT")
+    DB_NAME = os.environ.get("DB_NAME")
 
     app.config["SQLALCHEMY_DATABASE_URI"] = (
         f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
