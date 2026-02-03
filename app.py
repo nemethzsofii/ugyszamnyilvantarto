@@ -1,10 +1,12 @@
 from decimal import Decimal
-from flask import Flask, app, flash, redirect, render_template, request, jsonify, url_for
+from flask import Flask, flash, redirect, render_template, request, jsonify, url_for
 import traceback as tb
+from datetime import date, datetime
+import calendar
+
+import db_utils as dbu
 from db import db, init_db
 import models as md
-import db_utils as dbu
-from datetime import time
 
 def create_app(config=None):
     app = Flask(__name__)
@@ -213,16 +215,6 @@ def register_routes(app):
     def case_table():
         cases = dbu.get_all_cases()
         return render_template("case_table.html", cases=cases)
-    
-    from flask import render_template
-    from datetime import date, datetime, timedelta
-    from collections import defaultdict
-    import calendar
-    import db_utils as dbu
-
-    from flask import request
-    import calendar
-    from datetime import date, datetime, timedelta
 
     @app.route("/calendar")
     def calendar_view():
