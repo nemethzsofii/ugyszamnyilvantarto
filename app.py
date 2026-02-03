@@ -22,11 +22,11 @@ def register_routes(app):
     def home():
         return render_template("home.html")
     
-    @app.route("/case-work-input", methods=["GET"])
-    def case_work_input():
+    @app.route("/input_case_work", methods=["GET"])
+    def input_case_work():
         users = dbu.get_all_users()
         cases = dbu.get_all_cases()
-        return render_template("case_work_input.html",
+        return render_template("input_case_work.html",
                             users=users,
                             cases=cases)
 
@@ -113,7 +113,7 @@ def register_routes(app):
 
         dbu.create_case_work(user_id, case_id, date, start_time, end_time, description)
 
-        return redirect("/case-work-input")
+        return redirect("/input_case_work")
     
     @app.route("/case-work-table", methods=["GET"])
     def case_work_table():
@@ -121,11 +121,11 @@ def register_routes(app):
         return render_template("case_work_table.html", case_works=case_works)
 
     
-    @app.route("/case-input", methods=["GET"])
-    def case_input():
+    @app.route("/input_case", methods=["GET"])
+    def input_case():
         clients = dbu.get_all_clients()
 
-        return render_template("case_input.html", clients=clients, companies=dbu.get_all_outsource_companies())
+        return render_template("input_case.html", clients=clients, companies=dbu.get_all_outsource_companies())
 
 
     @app.route('/get-users', methods=['GET'])
@@ -163,65 +163,51 @@ def register_routes(app):
     @app.route('/save-case', methods=['POST'])
     def save_case():
         try:
+            # Get form data
             data = request.form
 
-            # 1️⃣ Create the new Case
-            new_case = md.Case.create(
+            # Create the new Case
+            md.Case.create(
                 name=data.get('case-name'),
                 client_id=int(data.get('client-id')),
                 description=data.get('case-description'),
                 billing_type=md.BillingType(data.get('billing_type')),
-                rate_amount=float(data.get('rate_amount', 0.0))
+                rate_amount=float(data.get('rate_amount', 0.0)),
+                is_outsourced=data.get('is-outsourced') == 'on',
+                outsource_company_id=int(data.get('outsource_company_id')) if data.get('is-outsourced') == 'on' else None
             )
 
-            # 2️⃣ Update is_outsourced flag
-            is_outsourced = data.get('is-outsourced') == 'on'
-            new_case.is_outsourced = is_outsourced
-
-            # 3️⃣ Assign allowed companies if outsourced
-            if is_outsourced:
-                selected_company_ids = data.getlist('allowed-companies')  # multi-select
-                for comp_id in selected_company_ids:
-                    company = md.OutsourceCompany.query.get(int(comp_id))
-                    if company:
-                        # create CaseOutsourceMap entry
-                        mapping = md.CaseOutsourceMap(case=new_case, company=company)
-                        db.session.add(mapping)
-
-            # 4️⃣ Commit everything
-            db.session.commit()
-
-            return render_template("case_input.html", message="Sikeresen elmentve!")
+            return render_template("input_case.html", message="Sikeresen elmentve!")
 
         except Exception as e:
             db.session.rollback()
             print(tb.format_exc())
-            return render_template("case_input.html", error="Hiba történt az ügy mentésekor.")
+            return render_template("input_case.html", error="Hiba történt az ügy mentésekor.")
 
-    @app.route('/outsource-company', methods=['GET', 'POST'])
-    def outsource_company():
+    @app.route('/input_outsource_company', methods=['GET', 'POST'])
+    def input_outsource_company():
         if request.method == 'POST':
             try:
                 name = request.form.get('company-name')
                 tax_number = request.form.get('tax-number')
 
                 if not name:
-                    return render_template('outsource_company.html', error="A név megadása kötelező.")
+                    return render_template('input_outsource_company.html', error="A név megadása kötelező.")
 
                 # Create the new OutsourceCompany
                 new_company = md.OutsourceCompany(name=name, tax_number=tax_number)
                 db.session.add(new_company)
                 db.session.commit()
 
-                return render_template('outsource_company.html', message="Sikeresen hozzáadva!")
+                return render_template('input_outsource_company.html', message="Sikeresen hozzáadva!")
 
             except Exception as e:
                 db.session.rollback()
                 print(tb.format_exc())
-                return render_template('outsource_company.html', error="Hiba történt a mentés során.")
+                return render_template('input_outsource_company.html', error="Hiba történt a mentés során.")
 
         # GET request
-        return render_template('outsource_company.html')
+        return render_template('input_outsource_company.html')
 
     @app.route("/case-table", methods=["GET"])
     def case_table():
@@ -296,9 +282,9 @@ def register_routes(app):
         clients = dbu.get_all_clients()
         return render_template("client_table.html", clients=clients)
 
-    @app.route("/client-input", methods=["GET"])
-    def client_input():
-        return render_template("client_input.html")
+    @app.route("/input_client", methods=["GET"])
+    def input_client():
+        return render_template("input_client.html")
 
     @app.route("/add-client", methods=["POST"])
     def add_client():
@@ -328,4 +314,4 @@ def register_routes(app):
 
         db.session.add(new_client)
         db.session.commit()
-        return redirect("/client-input")
+        return redirect("/input_client")

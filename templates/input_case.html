@@ -93,17 +93,15 @@ Nyilvántartó{% endblock %} {% block content %}
           </label>
         </div>
 
-        <!-- Allowed companies multi-select -->
+        <!-- Allowed company single-select -->
         <div class="mb-3" id="allowedCompaniesDiv" style="display: none">
-          <label class="form-label">Bedolgozható cégek</label>
-          <select class="form-select" name="allowed-companies" multiple>
+          <label class="form-label">Bedolgozható cég</label>
+          <select class="form-select" name="outsource_company_id">
+            <option value="">-- Válassz céget --</option>
             {% for company in companies %}
             <option value="{{ company.id }}">{{ company.name }}</option>
             {% endfor %}
           </select>
-          <small class="text-muted"
-            >Csak akkor használd, ha Bedolgozás van kijelölve</small
-          >
         </div>
 
         <div class="d-flex gap-2">

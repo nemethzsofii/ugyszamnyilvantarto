@@ -2,9 +2,9 @@ import enum
 from sqlalchemy import Enum
 from db import db
 
-# ----------------------------
-# USERS
-# ----------------------------
+class BillingType(enum.Enum):
+    HOURLY = "hourly"
+    FIXED = "fixed"
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -27,14 +27,6 @@ class User(db.Model):
             "last_name": self.last_name
         }
 
-
-# ----------------------------
-# CASES
-# ----------------------------
-class BillingType(enum.Enum):
-    HOURLY = "hourly"
-    FIXED = "fixed"
-
 class Case(db.Model):
     __tablename__ = 'cases'
 
@@ -44,18 +36,14 @@ class Case(db.Model):
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
     description = db.Column(db.String(255), nullable=True)
     is_outsourced = db.Column(db.Boolean, default=False, nullable=False)
+    outsource_company_id = db.Column(db.Integer, db.ForeignKey('outsource_companies.id'), nullable=True)
     billing_type = db.Column(Enum(BillingType, values_callable=lambda enum: [e.value for e in enum]), nullable=False,default=BillingType.FIXED)
     rate_amount = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
 
     # Relationships
     client = db.relationship("Client", back_populates="cases")
     works = db.relationship("CaseWork", back_populates="case", lazy=True)
-    allowed_companies = db.relationship(
-        "CaseOutsourceMap",
-        back_populates="case",
-        lazy=True,
-        cascade="all, delete-orphan"
-    )
+    outsource_company = db.relationship("OutsourceCompany", backref="cases", lazy=True)
 
     def __repr__(self):
         return f'<Case {self.number}: {self.name}>'
@@ -68,23 +56,35 @@ class Case(db.Model):
             "client_id": self.client_id,
             "description": self.description,
             "is_outsourced": self.is_outsourced,
-            "allowed_companies": [map.company_id for map in self.allowed_companies]
+            "outsource_company_id": self.outsource_company_id
         }
 
     @staticmethod
-    def create(name, client_id, description=None, billing_type=BillingType.FIXED, rate_amount=0.00):
-        """Create a new Case with a 0-padded number based on the auto-incremented ID."""
+    def create(name, client_id, description=None, billing_type=BillingType.FIXED, rate_amount=0.00, is_outsourced=False, outsource_company_id=None):
+        if is_outsourced and not outsource_company_id:
+            raise ValueError("Outsource company must be specified for outsourced cases.")
+
         new_case = Case(
             number="00000",
             name=name,
             client_id=client_id,
             description=description,
             billing_type=billing_type,
-            rate_amount=rate_amount
+            rate_amount=rate_amount,
+            is_outsourced=is_outsourced,
+            outsource_company_id=outsource_company_id
         )
+
         db.session.add(new_case)
         db.session.flush()
+
         new_case.number = str(new_case.id).zfill(5)
+
+        if new_case.is_outsourced:
+            outsource_company = OutsourceCompany.query.get(outsource_company_id)
+            short_name = outsource_company.short_name or ""
+            new_case.number = f"{short_name}{new_case.number}"
+
         db.session.commit()
         return new_case
 
@@ -94,31 +94,10 @@ class OutsourceCompany(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
     tax_number = db.Column(db.String(20), nullable=True)
-
-    # Relationship for cases it’s allowed to work on
-    cases_allowed = db.relationship(
-        "CaseOutsourceMap",
-        back_populates="company",
-        lazy=True,
-        cascade="all, delete-orphan"
-    )
+    short_name = db.Column(db.String(15), nullable=True)
 
     def __repr__(self):
         return f'<OutsourceCompany {self.id}: {self.name}>'
-
-
-class CaseOutsourceMap(db.Model):
-    __tablename__ = 'case_outsource_map'
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    case_id = db.Column(db.Integer, db.ForeignKey('cases.id'), nullable=False)
-    company_id = db.Column(db.Integer, db.ForeignKey('outsource_companies.id'), nullable=False)
-
-    case = db.relationship("Case", back_populates="allowed_companies")
-    company = db.relationship("OutsourceCompany", back_populates="cases_allowed")
-
-    def __repr__(self):
-        return f'<CaseOutsourceMap Case {self.case_id} ↔ Company {self.company_id}>'
 
 class CaseWork(db.Model):
     __tablename__ = 'case_work'
