@@ -57,6 +57,41 @@ def register_routes(app):
         else:
             return jsonify({"message": "Method not allowed"}), 405
 
+    @app.route("/edit-case-work/<int:case_work_id>", methods=["GET", "POST"])
+    def edit_case_work(case_work_id):
+        case_work = db.session.get(md.CaseWork, case_work_id)
+        if not case_work:
+            return jsonify({"message": "Case work not found"}), 404
+        if request.method == "POST":
+            case_work.user_id = int(request.form.get("user_id"))
+            case_work.case_id = int(request.form.get("case_id"))
+            case_work.date = request.form.get("date")
+            case_work.start_time = request.form.get("start_time")
+            case_work.end_time = request.form.get("end_time")
+            case_work.description = request.form.get("description")
+            case_work.billed = "billed" in request.form
+
+            db.session.commit()
+            return redirect(url_for("case_work_table"))
+        elif request.method == "GET":
+            return render_template(
+                "edit_case_work.html",
+                case_work=case_work,
+                users=dbu.get_all_users(),
+                cases=dbu.get_all_cases())
+        else:
+            return jsonify({"message": "Method not allowed"}), 405
+        
+    @app.route("/delete-case-work/<int:case_work_id>")
+    def delete_case_work(case_work_id):
+        case_work = md.CaseWork.query.get_or_404(case_work_id)
+
+        db.session.delete(case_work)
+        db.session.commit()
+
+        flash("A munka sikeresen törölve lett.", "success")
+        return redirect(url_for("case_work_table"))
+    
     @app.route("/delete-case/<int:case_id>")
     def delete_case(case_id):
         case = md.Case.query.get_or_404(case_id)

@@ -120,9 +120,6 @@ class CaseOutsourceMap(db.Model):
     def __repr__(self):
         return f'<CaseOutsourceMap Case {self.case_id} ↔ Company {self.company_id}>'
 
-# ----------------------------
-# CASE WORK
-# ----------------------------
 class CaseWork(db.Model):
     __tablename__ = 'case_work'
 
@@ -133,6 +130,7 @@ class CaseWork(db.Model):
     start_time = db.Column(db.Time, nullable=False)
     end_time = db.Column(db.Time, nullable=False)
     description = db.Column(db.String(255), nullable=True)
+    billed = db.Column(db.Boolean, default=False, nullable=False)
 
     # Relationships
     user = db.relationship("User", back_populates="case_works")
@@ -149,7 +147,8 @@ class CaseWork(db.Model):
             "date": self.date,
             "start_time": self.start_time,
             "end_time": self.end_time,
-            "description": self.description
+            "description": self.description,
+            "billed": self.billed
         }
 
 

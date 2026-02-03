@@ -1,0 +1,121 @@
+{% extends "layout.html" %} {% block title %}Munka szerkesztése - Jogügyleti
+Nyilvántartó{% endblock %} {% block content %}
+<h1 class="mb-4">Munka szerkesztése</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="POST">
+      <!-- User -->
+      <div class="mb-3">
+        <label class="form-label">Felhasználó</label>
+        <select class="form-select" name="user_id" required>
+          {% for user in users %}
+          <option
+            value="{{ user.id }}"
+            {%
+            if
+            user.id=="case_work.user_id"
+            %}selected{%
+            endif
+            %}
+          >
+            {{ user.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Case -->
+      <div class="mb-3">
+        <label class="form-label">Ügy</label>
+        <select class="form-select" name="case_id" required>
+          {% for case in cases %}
+          <option
+            value="{{ case.id }}"
+            {%
+            if
+            case.id=="case_work.case_id"
+            %}selected{%
+            endif
+            %}
+          >
+            {{ case.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Date -->
+      <div class="mb-3">
+        <label class="form-label">Dátum</label>
+        <input
+          type="date"
+          class="form-control"
+          name="date"
+          value="{{ case_work.date }}"
+          required
+        />
+      </div>
+
+      <!-- Start time -->
+      <div class="mb-3">
+        <label class="form-label">Kezdő idő</label>
+        <input
+          type="time"
+          class="form-control"
+          name="start_time"
+          value="{{ case_work.start_time }}"
+          required
+        />
+      </div>
+
+      <!-- End time -->
+      <div class="mb-3">
+        <label class="form-label">Befejező idő</label>
+        <input
+          type="time"
+          class="form-control"
+          name="end_time"
+          value="{{ case_work.end_time }}"
+          required
+        />
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label class="form-label">Leírás</label>
+        <textarea class="form-control" name="description" rows="4">
+{{ case_work.description or "" }}</textarea
+        >
+      </div>
+
+      <!-- Billed -->
+      <div class="mb-3 form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          name="billed"
+          id="billed"
+          {%
+          if
+          case_work.billed
+          %}checked{%
+          endif
+          %}
+        />
+        <label class="form-check-label" for="billed">Számlázva</label>
+      </div>
+
+      <!-- Actions -->
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Mentés</button>
+        <a
+          href="{{ url_for('case_work_table') }}"
+          class="btn btn-outline-secondary"
+          >Mégse</a
+        >
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
