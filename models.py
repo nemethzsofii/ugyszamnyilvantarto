@@ -1,6 +1,8 @@
 import enum
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Integer, cast, func
 from db import db
+from sqlalchemy.ext.hybrid import hybrid_property
+from datetime import datetime, timedelta
 
 class BillingType(enum.Enum):
     HOURLY = "hourly"
@@ -145,7 +147,7 @@ class CaseWork(db.Model):
     # Relationships
     user = db.relationship("User", back_populates="case_works")
     case = db.relationship("Case", back_populates="works")
-
+    
     def __repr__(self):
         return f'<CaseWork {self.id} for Case {self.case_id} by User {self.user_id}>'
 
@@ -160,6 +162,21 @@ class CaseWork(db.Model):
             "description": self.description,
             "billed": self.billed
         }
+    
+    @hybrid_property
+    def duration_seconds(self):
+        if self.start_time and self.end_time:
+            start_dt = datetime.combine(self.date, self.start_time)
+            end_dt = datetime.combine(self.date, self.end_time)
+            return (end_dt - start_dt).total_seconds()
+        return 0
+
+    @duration_seconds.expression
+    def duration_seconds(cls):
+        return (
+            cast(func.strftime('%s', cls.end_time), Integer) -
+            cast(func.strftime('%s', cls.start_time), Integer)
+        )
 
 
 # ----------------------------

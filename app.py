@@ -39,11 +39,7 @@ def register_routes(app):
                 md.Client.name.label("client_name"),
                 (
                     func.sum(
-                        func.timestampdiff(
-                            text("SECOND"),
-                            md.CaseWork.start_time,
-                            md.CaseWork.end_time
-                        )
+                        md.CaseWork.duration_seconds
                     ) / 3600
                 ).label("total_hours")
             )
@@ -61,27 +57,20 @@ def register_routes(app):
             db.session.query(
                 md.User.username,
                 func.sum(
-                    func.timestampdiff(
-                        text("SECOND"),
-                        md.CaseWork.start_time,
-                        md.CaseWork.end_time
-                    )
+                    md.CaseWork.duration_seconds
                 ).label("total_seconds")
             )
             .join(md.CaseWork)
             .group_by(md.User.username)
             .order_by(func.sum(
-                func.timestampdiff(
-                    text("SECOND"),
-                    md.CaseWork.start_time,
-                    md.CaseWork.end_time
-                )
+                func.strftime('%s', md.CaseWork.end_time) -
+                func.strftime('%s', md.CaseWork.start_time)
             ).desc())
             .all()
         )
 
         # -----------------------------
-        # 3. 🔥 UNBILLED WORK PER CASE
+        # 3. UNBILLED WORK PER CASE
         # -----------------------------
         unbilled = (
             db.session.query(
@@ -90,22 +79,14 @@ def register_routes(app):
                 md.Client.name.label("client_name"),
                 (
                     func.sum(
-                        func.timestampdiff(
-                            text("SECOND"),
-                            md.CaseWork.start_time,
-                            md.CaseWork.end_time
-                        )
+                        md.CaseWork.duration_seconds
                     ) / 3600
                 ).label("unbilled_hours"),
                 case(
                     (md.Case.billing_type == "hourly",
                     (
                         func.sum(
-                            func.timestampdiff(
-                                text("SECOND"),
-                                md.CaseWork.start_time,
-                                md.CaseWork.end_time
-                            )
+                            md.CaseWork.duration_seconds
                         ) / 3600
                     ) * md.Case.rate_amount),
                     else_=md.Case.rate_amount
