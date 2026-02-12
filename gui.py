@@ -12,7 +12,7 @@ if __name__ == "__main__":
     flask_thread.start()
 
     window = webview.create_window(
-        title="Jogügyleti Nyilvántartó",
+        title="Lexium",
         url="http://127.0.0.1:5000",
         width=1200,
         height=800,
