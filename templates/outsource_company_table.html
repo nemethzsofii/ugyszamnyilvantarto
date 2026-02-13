@@ -1,0 +1,152 @@
+{% extends "layout.html" %} {% block title %}Bedolgozható cégek - Jogügyleti
+Nyilvántartó{% endblock %} {% block content %}
+<style>
+  .table td,
+  .table th {
+    max-width: 200px;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  .table td,
+  .table th {
+    max-width: 200px;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  .modal-content {
+    background-color: #1f1f1f;
+    color: #ffffff;
+  }
+  .modal-header,
+  .modal-footer {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  th.sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+  th.sortable::after {
+    content: ' ⇅';
+    font-size: 0.8em;
+    color: #888;
+  }
+</style>
+<h1 class="mb-4">Rögzített bedolgozható cégek</h1>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    {% if outsource_companies is not defined %}
+    <p>Betöltés...</p>
+    {% elif outsource_companies|length == 0 %}
+    <p>Nincs még rögzített bedolgozható cég.</p>
+    {% else %}
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <input
+          type="text"
+          id="tableSearch"
+          class="form-control"
+          placeholder="Keresés..."
+        />
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th data-column="0" class="sortable">ID</th>
+            <th data-column="1" class="sortable">Név</th>
+            <th data-column="5" class="sortable">Rövidítés</th>
+            <th data-column="2" class="sortable">Adószám</th>
+            <th>Műveletek</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for company in outsource_companies %}
+          <tr>
+            <td>{{ company.id }}</td>
+            <td>{{ company.name }}</td>
+            <td>{{ company.short_name }}</td>
+            <td>{{ company.tax_number }}</td>
+            <td class="text-nowrap">
+              <a
+                href="/edit-outsource-company/{{ company.id }}"
+                class="btn btn-sm btn-outline-primary"
+                title="Szerkesztés"
+              >
+                <i class="fa-solid fa-pen"></i>
+              </a>
+              <a
+                href="#"
+                class="btn btn-sm btn-outline-danger"
+                title="Törlés"
+                data-bs-toggle="modal"
+                data-bs-target="#deleteOutsourceCompanyModal"
+                data-company-id="{{ company.id }}"
+              >
+                <i class="fa-solid fa-trash"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+    <div
+      class="modal fade"
+      id="deleteOutsourceCompanyModal"
+      tabindex="-1"
+      aria-labelledby="deleteOutsourceCompanyModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteOutsourceCompanyModalLabel">
+              Bedolgozható cég törlése
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Bezárás"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">
+              Biztosan törlöd ezt a bedolgozható cégét?<br />
+              <strong>Ez a művelet nem vonható vissza.</strong>
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Mégse
+            </button>
+            <form id="deleteForm" method="POST">
+              <button type="submit" class="btn btn-danger">Törlés</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/static/js/table_sort_search.js"></script>
+<script>
+  const deleteForm = document.getElementById('deleteForm');
+  const deleteModal = document.getElementById('deleteOutsourceCompanyModal');
+
+  deleteModal.addEventListener('show.bs.modal', function (event) {
+    const triggerBtn = event.relatedTarget;
+    const companyId = triggerBtn.getAttribute('data-company-id');
+
+    deleteForm.method = 'POST';
+    deleteForm.action = `/delete-outsource-company/${companyId}`;
+  });
+</script>
+{% endblock %}

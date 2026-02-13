@@ -1,5 +1,6 @@
 from decimal import Decimal
 import os
+import secrets
 from flask import Flask, app, flash, redirect, render_template, request, jsonify, url_for, Blueprint
 import traceback as tb
 from datetime import date, datetime
@@ -119,6 +120,43 @@ def register_routes(app):
             reports2=results2,
             unbilled=unbilled
         )
+
+    @app.route("/edit-outsource-company/<int:company_id>", methods=["GET", "POST"])
+    def edit_outsource_company(company_id):
+        company = db.session.get(md.OutsourceCompany, company_id)
+        if not company:
+            return jsonify({"message": "Company not found"}), 404
+
+        if request.method == "POST":
+            company.name = request.form.get("company-name")
+            company.short_name = request.form.get("company-short-name")
+            company.tax_number = request.form.get("company-tax-number")
+
+            db.session.commit()
+            return redirect(url_for("outsource_company_table"))
+        elif request.method == "GET":
+            return render_template(
+                "edit_outsource_company.html",
+                company=company
+            )
+        else:
+            return jsonify({"message": "Method not allowed"}), 405
+
+    @app.route("/delete-outsource-company/<int:company_id>", methods=["POST"])
+    def delete_outsource_company(company_id):
+        try:
+            company = md.OutsourceCompany.query.get_or_404(company_id)
+
+            db.session.delete(company)
+            db.session.commit()
+
+            flash("A bedolgozó cég sikeresen törölve lett.", "success")
+            return redirect(url_for("outsource_company_table"))
+        except Exception as e:
+            db.session.rollback()
+            print(tb.format_exc())
+            flash("Hiba történt a bedolgozó cég törlésekor.", "danger")
+            return redirect(url_for("outsource_company_table"))
 
     @app.route("/input_case_work", methods=["GET"])
     def input_case_work():
@@ -297,7 +335,10 @@ def register_routes(app):
 
                 if not name:
                     return render_template('input_outsource_company.html', error="A név megadása kötelező.")
-
+                if not short_name:
+                    return render_template('input_outsource_company.html', error="A rövid név megadása kötelező.")
+                if tax_number and len(tax_number) != 11:
+                    return render_template('input_outsource_company.html', error="Az adószámnak 11 karakterből kell állnia.")
                 # Create the new OutsourceCompany
                 new_company = md.OutsourceCompany(name=name, tax_number=tax_number, short_name=short_name)
                 db.session.add(new_company)
@@ -317,6 +358,11 @@ def register_routes(app):
     def case_table():
         cases = dbu.get_all_cases()
         return render_template("case_table.html", cases=cases)
+    
+    @app.route("/outsource-company-table", methods=["GET"])
+    def outsource_company_table():
+        companies = dbu.get_all_outsource_companies()
+        return render_template("outsource_company_table.html", outsource_companies=companies)
 
     @app.route("/calendar")
     def calendar_view():
