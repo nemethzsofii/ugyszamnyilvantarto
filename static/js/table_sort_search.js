@@ -1,55 +1,62 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // -------- SEARCH --------
-  const searchInput = document.getElementById('tableSearch');
-  const tableRows = document.querySelectorAll('tbody tr');
+  const tables = document.querySelectorAll('table');
 
-  searchInput.addEventListener('keyup', () => {
-    const query = searchInput.value.toLowerCase();
+  tables.forEach((table) => {
+    const tbody = table.querySelector('tbody');
+    const headers = table.querySelectorAll('th.sortable');
+    let sortDirection = {};
 
-    tableRows.forEach((row) => {
-      const text = row.innerText.toLowerCase();
-      row.style.display = text.includes(query) ? '' : 'none';
-    });
-  });
+    headers.forEach((header, index) => {
+      sortDirection[index] = 'asc';
 
-  // -------- SORTING --------
-  const table = document.querySelector('table');
-  const headers = table.querySelectorAll('th.sortable');
-  let sortDirection = {};
+      header.addEventListener('click', () => {
+        const type = header.dataset.type || 'string';
+        const direction = sortDirection[index];
+        const rows = Array.from(tbody.querySelectorAll('tr'));
 
-  headers.forEach((header) => {
-    sortDirection[header.dataset.column] = 'asc';
+        rows.sort((a, b) => {
+          let aText = a.children[index].innerText.trim();
+          let bText = b.children[index].innerText.trim();
 
-    header.addEventListener('click', () => {
-      const columnIndex = header.dataset.column;
-      const direction = sortDirection[columnIndex];
-      const rowsArray = Array.from(tableRows);
+          switch (type) {
+            case 'number':
+              aText = parseFloat(aText) || 0;
+              bText = parseFloat(bText) || 0;
+              break;
 
-      rowsArray.sort((a, b) => {
-        let aText = a.children[columnIndex].innerText.trim();
-        let bText = b.children[columnIndex].innerText.trim();
+            case 'date':
+              aText = new Date(aText);
+              bText = new Date(bText);
+              break;
 
-        // Date sort
-        if (columnIndex == 3) {
-          return direction === 'asc'
-            ? new Date(aText) - new Date(bText)
-            : new Date(bText) - new Date(aText);
-        }
+            default:
+              return direction === 'asc'
+                ? aText.localeCompare(bText, undefined, { numeric: true })
+                : bText.localeCompare(aText, undefined, { numeric: true });
+          }
 
-        // Number sort
-        if (!isNaN(aText) && !isNaN(bText)) {
           return direction === 'asc' ? aText - bText : bText - aText;
-        }
+        });
 
-        // String sort
-        return direction === 'asc'
-          ? aText.localeCompare(bText)
-          : bText.localeCompare(aText);
+        rows.forEach((row) => tbody.appendChild(row));
+        sortDirection[index] = direction === 'asc' ? 'desc' : 'asc';
       });
-
-      rowsArray.forEach((row) => table.querySelector('tbody').appendChild(row));
-
-      sortDirection[columnIndex] = direction === 'asc' ? 'desc' : 'asc';
     });
   });
+
+  // -------- SEARCH (per page, not per table) --------
+  const searchInput = document.getElementById('tableSearch');
+
+  if (searchInput) {
+    searchInput.addEventListener('keyup', () => {
+      const query = searchInput.value.toLowerCase();
+      const rows = document.querySelectorAll('tbody tr');
+
+      rows.forEach((row) => {
+        row.style.display = row.innerText.toLowerCase().includes(query)
+          ? ''
+          : 'none';
+      });
+    });
+  }
 });
