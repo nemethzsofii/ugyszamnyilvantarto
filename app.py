@@ -427,6 +427,12 @@ def register_routes(app):
                 client_code = request.form.get("client_code")
                 name = request.form.get("name")
                 tax_number = request.form.get("tax_number")
+                if not client_type:
+                    return render_template('input_client.html', error="Az ügyféltípus megadása kötelező.")
+                if not name:
+                    return render_template('input_client.html', error="A név megadása kötelező.")
+                if tax_number and len(tax_number) != 11:
+                    return render_template('input_client.html', error="Az adószámnak 11 karakterből kell állnia.")
 
                 if client_type == "PERSON":
                     birth_date = request.form.get("birth_date")
