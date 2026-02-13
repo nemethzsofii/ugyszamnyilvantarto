@@ -1,6 +1,6 @@
+from db import db
 import enum
 from sqlalchemy import Enum, Integer, cast, func
-from db import db
 from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime, timedelta
 
@@ -37,8 +37,9 @@ class CaseType(db.Model):
     active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name=None, active=True):
+        self.name = name
+        self.active = active
 
     def __repr__(self):
         return f'<CaseType {self.id}: {self.name}>'

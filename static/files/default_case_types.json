@@ -1,0 +1,23 @@
+{
+    "DEFAULT_CASE_TYPES": 
+    [
+        "Ingatlan adásvételi ügy",
+        "Ingatlan ajándékozási ügy",
+        "Ingatlanhasználati és bérleti ügy",
+        "Társasházi és birtokvédelmi ügy",
+        "Egyéb dologi jogi ügy",
+        "Cégeljárási és corporate ügy",
+        "Civil szervezeti ügy",
+        "Szerződéskészítési és véleményezési ügy",
+        "Követelésérvényesítési ügy",
+        "Kártérítési ügy",
+        "Végrehajtási ügy",
+        "Munkajogi ügy",
+        "Családjogi és hagyatéki ügy",
+        "Személyiségi jogi ügy",
+        "Közigazgatási és hatósági ügy",
+        "Büntetőügy",
+        "Egyéb jogi tanácsadás",
+        "Saját ügy (irodai/belső)"
+    ]
+}
