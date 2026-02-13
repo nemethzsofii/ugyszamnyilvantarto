@@ -441,7 +441,7 @@ def register_routes(app):
                         client_code=client_code,
                         name=name,
                         tax_number=tax_number,
-                        birth_date=birth_date,
+                        birth_date=datetime.strptime(birth_date, "%Y-%m-%d") if birth_date else None,
                         address=address
                     )
                 else:
