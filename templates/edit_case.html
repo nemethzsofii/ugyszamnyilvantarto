@@ -122,42 +122,6 @@ Nyilvántartó{% endblock %} {% block content %}
         />
       </div>
 
-      <!-- Outsourced -->
-      <div class="form-check mb-4">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          name="is_outsourced"
-          id="isOutsourced"
-          {%
-          if
-          case.is_outsourced
-          %}checked{%
-          endif
-          %}
-        />
-        <label class="form-check-label" for="isOutsourced">
-          Kiszervezett ügy
-        </label>
-      </div>
-	  
-	  <!-- Allowed company single-select -->
-        <div class="mb-3" id="allowedCompaniesDiv" style="display: none">
-          <label class="form-label">Bedolgozható cég</label>
-          <select class="form-select" name="outsource_company_id">
-            <option value="">-- Válassz céget --</option>
-            {% for company in companies %}
-            <option value="{{ company.id }}">{{ company.name }}</option>
-			{%
-            if
-            company.id=="case.outsource_company_id"
-            %}selected{%
-            endif
-            %}
-            {% endfor %}
-          </select>
-        </div>
-
       <!-- Actions -->
       <div class="d-flex gap-2">
         <button type="submit" class="btn btn-primary">Mentés</button>
@@ -177,18 +141,6 @@ Nyilvántartó{% endblock %} {% block content %}
       rateLabel.textContent =
         radio.value === 'hourly' ? 'Óradíj (HUF)' : 'Fix díj (HUF)';
     });
-  });
-</script>
-<script>
-  const isOutsourcedCheckbox = document.getElementById('isOutsourced');
-  const allowedCompaniesDiv = document.getElementById('allowedCompaniesDiv');
-
-  isOutsourcedCheckbox.addEventListener('change', function () {
-    if (this.checked) {
-      allowedCompaniesDiv.style.display = 'block';
-    } else {
-      allowedCompaniesDiv.style.display = 'none';
-    }
   });
 </script>
 {% endblock %}
