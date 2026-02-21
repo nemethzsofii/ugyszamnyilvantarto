@@ -2,7 +2,45 @@
 Nyilvántartó{% endblock %} {% block content %}
 <h1 class="text-center mb-5">Riportok</h1>
 
+<div class="mb-3">
+  <label class="form-check-label me-2">
+    <label class="form-check-label me-2">
+      <input
+        type="checkbox"
+        id="activeOnly"
+        class="form-check-input"
+        {%
+        if
+        active_only
+        %}checked{%
+        endif
+        %}
+      />
+      Csak aktív ügyek
+    </label>
+</div>
+
 <div class="row g-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div id="pdf-alert" class="mb-3"></div>
+      <h5 class="mb-4">Ügy összefoglaló PDF letöltése</h5>
+      <p>
+        Az alábbi gombra kattintva letöltheted egy adott ügy összefoglaló
+        PDF-jét, amely tartalmazza az ügy részleteit és a hozzá kapcsolódó
+        munkákat.
+      </p>
+      <label for="case-number" class="form-label">Ügyszám:</label>
+      <input type="text" id="case-number" class="form-control mb-3" />
+
+      <button id="downloadPdfBtn" type="button" class="btn btn-primary">
+        <i class="fa-solid fa-file-pdf"></i> PDF letöltése
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4" style="margin-top: 15px">
   <div class="card shadow-sm">
     <div class="card-body">
       <h5 class="mb-4">Ügyekre fordított munkaidő</h5>
@@ -122,7 +160,54 @@ Nyilvántartó{% endblock %} {% block content %}
 </div>
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const alertBox = document.getElementById('pdf-alert');
+  const button = document.getElementById('downloadPdfBtn');
 
+  function showAlert(message, type = 'danger') {
+    alertBox.innerHTML = `
+      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+  }
+
+  button.addEventListener('click', async () => {
+    const caseNumber = document.getElementById('case-number').value.trim();
+
+    if (!caseNumber) {
+      showAlert('Kérlek add meg az ügyszámot!', 'warning');
+      return;
+    }
+
+    button.disabled = true;
+    button.innerHTML = 'Generálás...';
+
+    try {
+      const response = await fetch(`/cases/${caseNumber}/export-pdf`);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Hiba történt.');
+      }
+
+      showAlert('PDF megnyitva!', 'success');
+    } catch (error) {
+      showAlert(error.message || 'Ismeretlen hiba történt.', 'danger');
+    } finally {
+      button.disabled = false;
+      button.innerHTML = `<i class="fa-solid fa-file-pdf"></i> PDF letöltése`;
+    }
+  });
+</script>
+<script>
+  document.getElementById('activeOnly').addEventListener('change', function() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('active_only', this.checked ? '1' : '0');
+    window.location.search = params.toString();
+  });
+</script>
 <script>
   const unbilledLabels = [
     {% for row in unbilled %}

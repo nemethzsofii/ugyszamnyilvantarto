@@ -60,6 +60,7 @@ endblock %} {% block content %}
             <th data-type="string" class="sortable">Ügytípus</th>
             <th data-type="string" class="sortable">Ügyfél</th>
             <th data-type="string" class="sortable">Leírás</th>
+            <th data-type="boolean" class="sortable">Aktív</th>
             <th>Műveletek</th>
           </tr>
         </thead>
@@ -72,6 +73,13 @@ endblock %} {% block content %}
             <td>{{ case.case_type.name if case.case_type else '' }}</td>
             <td>{{ case.client.name if case.client else '' }}</td>
             <td>{{ case.description or '' }}</td>
+            <td data-value="{{ 1 if case.is_active else 0 }}">
+              {% if case.is_active %}
+              <i class="fa-solid fa-check text-success"></i>
+              {% else %}
+              <i class="fa-solid fa-xmark text-danger"></i>
+              {% endif %}
+            </td>
             <td class="text-nowrap">
               <a
                 href="/edit-case/{{ case.id }}"

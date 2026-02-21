@@ -70,6 +70,7 @@ class Case(db.Model):
     billing_type = db.Column(Enum(BillingType, values_callable=lambda enum: [e.value for e in enum]), nullable=False,default=BillingType.FIXED)
     rate_amount = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     case_type_id = db.Column(db.Integer, db.ForeignKey('case_types.id'), nullable=True)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     # Relationships
     client = db.relationship("Client", back_populates="cases")

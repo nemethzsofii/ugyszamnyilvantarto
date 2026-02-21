@@ -1,10 +1,22 @@
 from decimal import Decimal
 import os
+from pydoc import doc
 import secrets
-from flask import Flask, app, flash, redirect, render_template, request, jsonify, url_for, Blueprint
+from flask import Flask, app, flash, redirect, render_template, request, jsonify, url_for, Blueprint, send_file, abort
 import traceback as tb
 from datetime import date, datetime
 import calendar
+import tempfile
+import webbrowser
+
+from io import BytesIO
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib import pagesizes
+from reportlab.lib.units import inch
+from datetime import timedelta
 
 from sqlalchemy import case, func, text
 
@@ -65,86 +77,214 @@ def register_routes(app):
     @app.route('/')
     def home():
         return render_template("home.html")
-    
+
+    @app.route("/cases/<case_number>/export-pdf")
+    def export_case_pdf(case_number):
+        # ---- Fetch Case ----
+        case = md.Case.query.filter_by(number=case_number).first()
+
+        if not case:
+            return jsonify({"error": "Ügy nem található."}), 404
+
+        # ---- Fetch Works ----
+        works = (
+            md.CaseWork.query
+            .filter_by(case_id=case.id, billed=False)
+            .order_by(md.CaseWork.date, md.CaseWork.start_time)
+            .all()
+        )
+
+        if not works:
+            return jsonify({"error": "Nem található rögzített munka ehhez az ügyhöz."}), 404
+
+        # ---- PDF Setup ----
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=pagesizes.A4,
+            rightMargin=20,
+            leftMargin=20,
+            topMargin=20,
+            bottomMargin=20
+        )
+
+        # Define a style for wrapping text in the table
+        table_style = ParagraphStyle(
+            name="TableCell",
+            fontName="Helvetica",
+            fontSize=8,
+            leading=10,            # line height
+            alignment=TA_LEFT
+        )
+
+        elements = []
+        styles = getSampleStyleSheet()
+
+        # ---- Title ----
+        elements.append(
+            Paragraph(
+                f"<b>Ügy összefoglaló</b><br/>{case.number} - {case.name}",
+                styles["Heading1"]
+            )
+        )
+        elements.append(Spacer(1, 0.4 * inch))
+
+        # ---- Table Header ----
+        data = [[
+            "Dátum",
+            "Felhasználó",
+            "Kezdet",
+            "Vége",
+            "Idotartam (h)",
+            "Leírás"
+        ]]
+
+        total_seconds = 0
+
+        # ---- Table Rows ----
+        for w in works:
+            duration_hours = round(w.duration_seconds / 3600, 2)
+            total_seconds += w.duration_seconds
+
+            row = [
+                Paragraph(w.date.strftime("%Y-%m-%d"), table_style),
+                Paragraph(w.user.username if w.user else "-", table_style),
+                Paragraph(w.start_time.strftime("%H:%M"), table_style),
+                Paragraph(w.end_time.strftime("%H:%M"), table_style),
+                Paragraph(f"{duration_hours}", table_style),
+                Paragraph("Yes" if w.billed else "No", table_style),
+                Paragraph(w.description.replace("ő", "o") or "-", table_style)
+            ]
+            data.append(row)
+
+        total_hours = round(total_seconds / 3600, 2)
+
+        # ---- Create Table ----
+        table = Table(
+            data,
+            repeatRows=1,
+            colWidths = [60, 90, 40, 40, 60, 40, 225],
+            splitByRow=1  # allows row to break over pages
+        )
+
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+
+            ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
+
+            ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [
+                colors.whitesmoke,
+                colors.transparent
+            ])
+        ]))
+
+        elements.append(table)
+        elements.append(Spacer(1, 0.4 * inch))
+
+        # ---- Total Summary ----
+        elements.append(
+            Paragraph(
+                f"<b>Total hours:</b> {total_hours} h",
+                styles["Heading2"]
+            )
+        )
+
+        # Build PDF
+        doc.build(elements)
+        buffer.seek(0)
+
+        # Save to temp file
+        temp_dir = tempfile.gettempdir()
+        file_path = os.path.join(temp_dir, f"case_{case.number}_report.pdf")
+
+        with open(file_path, "wb") as f:
+            f.write(buffer.read())
+
+        # Open with default system PDF viewer
+        webbrowser.open(file_path)
+
+        return jsonify({"success": True})
+
     @app.route("/reports")
     def reports():
+        active_only = request.args.get("active_only", "1") == "1"  # default checked
+
         # -----------------------------
         # 1. Total worked hours per case
         # -----------------------------
-        results1 = (
+        query1 = (
             db.session.query(
                 md.Case.id.label("case_id"),
                 md.Case.number.label("case_number"),
                 md.Case.name.label("case_name"),
                 md.Client.name.label("client_name"),
-                (
-                    func.sum(
-                        md.CaseWork.duration_seconds
-                    ) / 3600
-                ).label("total_hours")
+                (func.sum(md.CaseWork.duration_seconds) / 3600).label("total_hours")
             )
             .join(md.CaseWork)
             .join(md.Client)
-            .group_by(md.Case.id, md.Client.name)
-            .order_by(md.Case.number)
-            .all()
         )
+
+        if active_only:
+            query1 = query1.filter(md.Case.is_active == True)
+
+        results1 = query1.group_by(md.Case.id, md.Client.name).order_by(md.Case.number).all()
 
         # -----------------------------
         # 2. Work per user
         # -----------------------------
-        results2 = (
+        query2 = (
             db.session.query(
                 md.User.username,
-                func.sum(
-                    md.CaseWork.duration_seconds
-                ).label("total_seconds")
+                func.sum(md.CaseWork.duration_seconds).label("total_seconds")
             )
             .join(md.CaseWork)
-            .group_by(md.User.username)
-            .order_by(func.sum(
-                func.strftime('%s', md.CaseWork.end_time) -
-                func.strftime('%s', md.CaseWork.start_time)
-            ).desc())
-            .all()
         )
+
+        if active_only:
+            query2 = query2.join(md.Case).filter(md.Case.is_active == True)
+
+        results2 = query2.group_by(md.User.username).order_by(
+            func.sum(func.strftime('%s', md.CaseWork.end_time) -
+                    func.strftime('%s', md.CaseWork.start_time)).desc()
+        ).all()
 
         # -----------------------------
         # 3. UNBILLED WORK PER CASE
         # -----------------------------
-        unbilled = (
+        query3 = (
             db.session.query(
                 md.Case.number.label("case_number"),
                 md.Case.name.label("case_name"),
                 md.Client.name.label("client_name"),
-                (
-                    func.sum(
-                        md.CaseWork.duration_seconds
-                    ) / 3600
-                ).label("unbilled_hours"),
+                (func.sum(md.CaseWork.duration_seconds) / 3600).label("unbilled_hours"),
                 case(
                     (md.Case.billing_type == "hourly",
-                    (
-                        func.sum(
-                            md.CaseWork.duration_seconds
-                        ) / 3600
-                    ) * md.Case.rate_amount),
+                    (func.sum(md.CaseWork.duration_seconds) / 3600) * md.Case.rate_amount),
                     else_=md.Case.rate_amount
                 ).label("estimated_amount")
             )
             .join(md.CaseWork)
             .join(md.Client)
             .filter(md.CaseWork.billed == False)
-            .group_by(md.Case.id, md.Client.name)
-            .order_by(md.Case.number)
-            .all()
         )
+
+        if active_only:
+            query3 = query3.filter(md.Case.is_active == True)
+
+        unbilled = query3.group_by(md.Case.id, md.Client.name).order_by(md.Case.number).all()
 
         return render_template(
             "reports.html",
             reports1=results1,
             reports2=results2,
-            unbilled=unbilled
+            unbilled=unbilled,
+            active_only=active_only
         )
 
     @app.route("/edit-outsource-company/<int:company_id>", methods=["GET", "POST"])
@@ -298,12 +438,15 @@ def register_routes(app):
 
         if request.method == "POST":
             case.name = request.form.get("case-name")
+            case.number = request.form.get("case-number")
             case.description = request.form.get("case-description")
             case.client_id = int(request.form.get("client-id"))
             case.case_type_id = int(request.form.get("case-type-id")) if request.form.get("case-type-id") else None
 
             case.billing_type = md.BillingType(request.form.get("billing_type"))
             case.rate_amount = Decimal(request.form.get("rate_amount", "0.00"))
+
+            case.is_active = "is-active" in request.form
 
             db.session.commit()
             return redirect(url_for("case_table"))

@@ -5,6 +5,18 @@ Nyilvántartó{% endblock %} {% block content %}
 <div class="card shadow-sm">
   <div class="card-body">
     <form method="POST">
+	<!-- Case number -->
+      <div class="mb-3">
+        <label class="form-label">Ügyszám</label>
+        <input
+          type="text"
+          class="form-control"
+          name="case-number"
+          value="{{ case.number }}"
+          required
+        />
+      </div>
+	  
       <!-- Case name -->
       <div class="mb-3">
         <label class="form-label">Ügy neve</label>
@@ -120,6 +132,23 @@ Nyilvántartó{% endblock %} {% block content %}
           value="{{ case.rate_amount }}"
           required
         />
+      </div>
+	  
+	  <!-- Active -->
+      <div class="mb-3 form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          name="is-active"
+          id="is-active"
+          {%
+          if
+          case.is_active
+          %}checked{%
+          endif
+          %}
+        />
+        <label class="form-check-label" for="is-active">Aktív</label>
       </div>
 
       <!-- Actions -->
